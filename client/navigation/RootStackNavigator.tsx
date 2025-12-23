@@ -1,7 +1,7 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import WebViewScreen from "@/screens/WebViewScreen";
-import HeaderTitle from "@/components/HeaderTitle";
+import { HeaderTitle } from "@/components/HeaderTitle";
 
 export type RootStackParamList = {
   WebView: undefined;
@@ -13,7 +13,7 @@ export default function RootStackNavigator() {
   return (
     <Stack.Navigator
       screenOptions={{
-        headerTitle: () => <HeaderTitle />,
+        headerTitle: () => <HeaderTitle title="Trip Planner KSA" />,
         headerTransparent: true,
         headerBlurEffect: "prominent",
       }}

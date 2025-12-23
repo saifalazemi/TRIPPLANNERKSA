@@ -6,14 +6,12 @@ import {
   Text,
   Pressable,
   Platform,
-  AppState,
 } from "react-native";
 import WebView, { type WebViewNavigation } from "react-native-webview";
 import { useTheme } from "@/hooks/useTheme";
 import { Colors, Spacing, Typography } from "@/constants/theme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Notifications from "expo-notifications";
-import * as Device from "expo-device";
 import { apiRequest } from "@/lib/query-client";
 
 interface WebViewState {
@@ -22,13 +20,12 @@ interface WebViewState {
   canGoBack: boolean;
 }
 
-const WEBSITE_URL = "https://tripplannerksa.com";
+const WEBSITE_URL = "https://stable-jade-vqfivy7b1o.edgeone.dev/";
 
 export default function WebViewScreen() {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
   const webViewRef = useRef<WebView>(null);
-  const appState = useRef(AppState.currentState);
 
   const [state, setState] = useState<WebViewState>({
     isLoading: true,
@@ -43,11 +40,6 @@ export default function WebViewScreen() {
   // Initialize push notifications
   useEffect(() => {
     const registerPushNotifications = async () => {
-      if (!Device.isDevice) {
-        console.log("Must use physical device for push notifications");
-        return;
-      }
-
       try {
         // Request notification permission
         const { status } = await Notifications.getPermissionsAsync();
@@ -71,17 +63,19 @@ export default function WebViewScreen() {
         // Send token to backend
         if (token.data) {
           try {
-            const deviceId =
-              Device.modelId ||
-              Device.osBuildId ||
-              `device-${Date.now()}`;
+            const deviceId = `device-${Date.now()}`;
             const platform = Platform.OS === "ios" ? "ios" : "android";
 
-            await apiRequest("POST", "/api/notifications/register", {
-              deviceId,
-              token: token.data,
-              platform,
+            const url = new URL("/api/notifications/register", "http://localhost:5000");
+            const response = await fetch(url.toString(), {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ deviceId, token: token.data, platform }),
             });
+
+            if (!response.ok) {
+              console.error("Failed to register push token:", response.statusText);
+            }
           } catch (error) {
             console.error("Failed to register push token with backend:", error);
           }
@@ -92,15 +86,6 @@ export default function WebViewScreen() {
     };
 
     registerPushNotifications();
-
-    // Handle app state changes
-    const subscription = AppState.addEventListener("change", (state) => {
-      appState.current = state;
-    });
-
-    return () => {
-      subscription.remove();
-    };
   }, []);
 
   // Handle navigation state changes
