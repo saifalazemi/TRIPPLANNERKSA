@@ -1,38 +1,43 @@
-import { type User, type InsertUser } from "@shared/schema";
-import { randomUUID } from "crypto";
-
-// modify the interface with any CRUD methods
-// you might need
+import { type NotificationToken, type InsertNotificationToken, notificationTokens } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 export interface IStorage {
-  getUser(id: string): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  getNotificationToken(deviceId: string): Promise<NotificationToken | undefined>;
+  createOrUpdateNotificationToken(data: InsertNotificationToken & { deviceId: string }): Promise<NotificationToken>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-
-  constructor() {
-    this.users = new Map();
+export class DatabaseStorage implements IStorage {
+  async getNotificationToken(deviceId: string): Promise<NotificationToken | undefined> {
+    const [token] = await db
+      .select()
+      .from(notificationTokens)
+      .where(eq(notificationTokens.deviceId, deviceId));
+    return token || undefined;
   }
 
-  async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
-  }
-
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
-  }
-
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
-    return user;
+  async createOrUpdateNotificationToken(data: InsertNotificationToken & { deviceId: string }): Promise<NotificationToken> {
+    const existing = await this.getNotificationToken(data.deviceId);
+    
+    if (existing) {
+      const [updated] = await db
+        .update(notificationTokens)
+        .set({
+          token: data.token,
+          platform: data.platform,
+          updatedAt: new Date(),
+        })
+        .where(eq(notificationTokens.deviceId, data.deviceId))
+        .returning();
+      return updated;
+    }
+    
+    const [created] = await db
+      .insert(notificationTokens)
+      .values(data)
+      .returning();
+    return created;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();

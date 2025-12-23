@@ -1,4 +1,4 @@
-# Design Guidelines: Website Webview Wrapper Mobile App
+# Design Guidelines: Trip Planner KSA - Website Webview Wrapper Mobile App
 
 ## Architecture Decisions
 
@@ -65,8 +65,10 @@
 ## Design System
 
 ### Color Palette
-**Theme Colors** (match Median.co branding):
-- Primary/Accent: User-defined from Median.co config (used for loading indicators, pull-to-refresh spinner)
+**Theme Colors** (Trip Planner KSA):
+- Primary/Accent: #007AFF (Apple Blue - used for loading indicators, buttons)
+- Dark Teal: #2D5A5A (splash screen background)
+- Forest Green: #1B6F4C (adaptive icon background)
 - Background: Transparent (webview shows website colors)
 - Error State Background: #FFFFFF (light mode), #000000 (dark mode)
 - Status Bar: Translucent, auto-adjusts text color based on content

@@ -1,33 +1,27 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import MainTabNavigator from "@/navigation/MainTabNavigator";
-import ModalScreen from "@/screens/ModalScreen";
-import { useScreenOptions } from "@/hooks/useScreenOptions";
+import WebViewScreen from "@/screens/WebViewScreen";
+import HeaderTitle from "@/components/HeaderTitle";
 
 export type RootStackParamList = {
-  Main: undefined;
-  Modal: undefined;
+  WebView: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function RootStackNavigator() {
-  const screenOptions = useScreenOptions();
-
   return (
-    <Stack.Navigator screenOptions={screenOptions}>
+    <Stack.Navigator
+      screenOptions={{
+        headerTitle: () => <HeaderTitle />,
+        headerTransparent: true,
+        headerBlurEffect: "prominent",
+      }}
+    >
       <Stack.Screen
-        name="Main"
-        component={MainTabNavigator}
+        name="WebView"
+        component={WebViewScreen}
         options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="Modal"
-        component={ModalScreen}
-        options={{
-          presentation: "modal",
-          headerTitle: "Modal",
-        }}
       />
     </Stack.Navigator>
   );
