@@ -1,18 +1,15 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import {
   StyleSheet,
   ActivityIndicator,
   View,
   Text,
   Pressable,
-  Platform,
 } from "react-native";
 import WebView, { type WebViewNavigation } from "react-native-webview";
 import { useTheme } from "@/hooks/useTheme";
 import { Colors, Spacing, Typography } from "@/constants/theme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import * as Notifications from "expo-notifications";
-import { apiRequest } from "@/lib/query-client";
 
 interface WebViewState {
   isLoading: boolean;
@@ -32,61 +29,6 @@ export default function WebViewScreen() {
     error: null,
     canGoBack: false,
   });
-
-  const [notificationToken, setNotificationToken] = useState<string | null>(
-    null
-  );
-
-  // Initialize push notifications
-  useEffect(() => {
-    const registerPushNotifications = async () => {
-      try {
-        // Request notification permission
-        const { status } = await Notifications.getPermissionsAsync();
-        let finalStatus = status;
-
-        if (status !== "granted") {
-          const { status: newStatus } =
-            await Notifications.requestPermissionsAsync();
-          finalStatus = newStatus;
-        }
-
-        if (finalStatus !== "granted") {
-          console.log("Failed to get push notification permission");
-          return;
-        }
-
-        // Get the push token
-        const token = await Notifications.getExpoPushTokenAsync();
-        setNotificationToken(token.data);
-
-        // Send token to backend
-        if (token.data) {
-          try {
-            const deviceId = `device-${Date.now()}`;
-            const platform = Platform.OS === "ios" ? "ios" : "android";
-
-            const url = new URL("/api/notifications/register", "http://localhost:5000");
-            const response = await fetch(url.toString(), {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ deviceId, token: token.data, platform }),
-            });
-
-            if (!response.ok) {
-              console.error("Failed to register push token:", response.statusText);
-            }
-          } catch (error) {
-            console.error("Failed to register push token with backend:", error);
-          }
-        }
-      } catch (error) {
-        console.error("Failed to initialize push notifications:", error);
-      }
-    };
-
-    registerPushNotifications();
-  }, []);
 
   // Handle navigation state changes
   const handleNavigationStateChange = (navState: WebViewNavigation) => {
